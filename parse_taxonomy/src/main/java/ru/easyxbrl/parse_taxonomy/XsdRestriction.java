@@ -33,6 +33,16 @@ public class XsdRestriction {
         </xsd:restriction>
       </xsd:simpleContent>
     </xsd:complexType>
+
+    <xsd:complexType>
+      <xsd:simpleContent>
+        <xsd:restriction base="xbrli:dateItemType">
+          <xsd:pattern value="(19|20)\d\d-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])"/>
+          <xsd:attributeGroup ref="xbrli:nonNumericItemAttrs"/>
+        </xsd:restriction>
+      </xsd:simpleContent>
+    </xsd:complexType>
+
 */
 
 	/**
@@ -98,6 +108,8 @@ public class XsdRestriction {
 			
 			r.base = XbrlType.getItemByUri(base.length==1 ? base[0] : ("{" + ns.get(base[0]) + "}"+base[1]));
 			if (r.base==null) System.out.println(xbrl.parent + " " + xbrl.id + "Неизвестный тип " + node.getAttributes().getNamedItem("base").getTextContent());
+			
+			if (xbrl.type == null) xbrl.type = r.base;
 			
 			final NodeList nl = node.getChildNodes();
 			for (int i=0; i<nl.getLength(); i++) {

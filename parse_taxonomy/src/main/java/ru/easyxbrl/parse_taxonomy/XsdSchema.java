@@ -73,7 +73,7 @@ public abstract class XsdSchema {
 		
 		
 		
-		//if (!location.endsWith("SR_0420409.xsd")) return;
+		//if (!location.endsWith("uk-dic.xsd")) return;
 
 		
 		

@@ -39,7 +39,11 @@ public class Dictionary extends XsdSchema {
 			v.importElements.forEach( i -> { 
 				if (!dictLocation.contains(i.schemaLocation)) {
 
-					dictLocation.add(i.schemaLocation); 
+					dictLocation.add(i.schemaLocation);
+					
+					
+//					if (i.schemaLocation.endsWith("uk-dic.xsd"))
+//						System.out.println("dict " + i.schemaLocation);
 					
 					// Обрабатываем словарь
 					try {

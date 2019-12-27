@@ -92,7 +92,7 @@ public class LoadTaxonomyFromZip {
 	 */
 	static public void parse(Core core, InputStream is) throws Exception {
 		
-		System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "4");
+		//System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "4");
 
 		dbf.setValidating(false); // без интернета происходит ошибка java.net.UnknownHostException: www.oasis-open.org
 		dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
@@ -138,66 +138,75 @@ public class LoadTaxonomyFromZip {
 
 			final Queue<String> removeTables = new ConcurrentLinkedQueue<>(); // таблицы на удаление из точек входа (т.к. словари)
 
-			nsOkudTable.parallelStream().forEach( x -> {
+			//nsOkudTable.parallelStream().forEach( x -> {
+			nsOkudTable.stream().forEach( x -> {
 				
-				// для всех таблиц добавляем соотношение между namespace и location
-				location.put(x.targetNamespace, catalog.pathToUri(x.getLocation()));
-				revLocation.put(catalog.pathToUri(x.getLocation()), x.targetNamespace);
-				
-				// Если в таблице есть элементы, то это словарь, а не таблица отчётности
-				if (x.elements.isEmpty()) {
-
-					final XbrlTable tbl = new XbrlTable(x.targetNamespace);
-					tables.putIfAbsent(x.targetNamespace, tbl);
-
-					// вносим информацию из RoleType в таблицу
-					// если в дальнейшем role раздела definition будет отсутствовать в roleType
-					// то будем считать этот раздел списком!
+				try {
 					
-					x.roleType.forEach( r -> {
-						tbl.putRoleUri(x.targetNamespace, r.id, r.roleURI, r.definition);
-					});
 					
-					// обрабатываем definition-файл
-					x.definition.forEach( d-> {
-						try {
-							final XsdSchemaDefinition def = new XsdSchemaDefinition(core, d, Dictionary.dicts, "definitionLink", "definitionArc", tbl);
-							def.defList.forEach( defElement -> {
+					// для всех таблиц добавляем соотношение между namespace и location
+					location.put(x.targetNamespace, catalog.pathToUri(x.getLocation()));
+					revLocation.put(catalog.pathToUri(x.getLocation()), x.targetNamespace);
+					
+					// Если в таблице есть элементы, то это словарь, а не таблица отчётности
+					if (x.elements.isEmpty()) {
 
-								tbl.definitions.put(defElement.role, defElement);
-								
-							});
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					});
-					
-					x.presentation.forEach( d-> {
-						try {
-							final XsdSchemaDefinition def = new XsdSchemaDefinition(core, d, Dictionary.dicts, "presentationLink", "presentationArc", tbl);
-							def.defList.forEach( defElement -> {
-								
-								tbl.presentation.put(defElement.role, defElement);
-								
-							});
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					});
-					
-					// Обработка локальных меток
-					x.label.forEach( l-> {
-						//System.out.println("   lbl " + x.targetNamespace + " " + l);
-						try {
-							new XsdSchemaLabel(core, l, Dictionary.dicts, tbl.labels);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					});
+						final XbrlTable tbl = new XbrlTable(x.targetNamespace);
+						tables.putIfAbsent(x.targetNamespace, tbl);
 
-				} else {
-					// вносим в список на удаление из таблиц точек входа
-					removeTables.add(x.targetNamespace);
+						// вносим информацию из RoleType в таблицу
+						// если в дальнейшем role раздела definition будет отсутствовать в roleType
+						// то будем считать этот раздел списком!
+						
+						x.roleType.forEach( r -> {
+							tbl.putRoleUri(x.targetNamespace, r.id, r.roleURI, r.definition);
+						});
+						
+						// обрабатываем definition-файл
+						x.definition.forEach( d-> {
+							try {
+								final XsdSchemaDefinition def = new XsdSchemaDefinition(core, d, Dictionary.dicts, "definitionLink", "definitionArc", tbl);
+								def.defList.forEach( defElement -> {
+
+									tbl.definitions.put(defElement.role, defElement);
+									
+								});
+							} catch (Exception e) {
+								//e.printStackTrace();
+							}
+						});
+						
+						x.presentation.forEach( d-> {
+							try {
+								final XsdSchemaDefinition def = new XsdSchemaDefinition(core, d, Dictionary.dicts, "presentationLink", "presentationArc", tbl);
+								def.defList.forEach( defElement -> {
+									
+									tbl.presentation.put(defElement.role, defElement);
+									
+								});
+							} catch (Exception e) {
+								//e.printStackTrace();
+							}
+						});
+						
+						// Обработка локальных меток
+						x.label.forEach( l-> {
+							//System.out.println("   lbl " + x.targetNamespace + " " + l);
+							try {
+								new XsdSchemaLabel(core, l, Dictionary.dicts, tbl.labels);
+							} catch (Exception e) {
+								//e.printStackTrace();
+							}
+						});
+
+					} else {
+						// вносим в список на удаление из таблиц точек входа
+						removeTables.add(x.targetNamespace);
+					}
+					
+				} catch (Exception exOkud) {
+					System.out.println("Ошибка при обработке!");
+					System.out.println(getTrace());
 				}
 				
 			});
@@ -303,7 +312,8 @@ public class LoadTaxonomyFromZip {
 					}
 				}
 	    	} catch (ParserConfigurationException | SAXException e) {
-	    		throw new RuntimeException("Ошибка обработки "+description);
+	    		//throw new RuntimeException("Ошибка обработки "+description);
+	    		System.out.println("Ошибка обработки "+description);
 			}
 		} else {
 			System.out.println("Ошибка! "+description+" не обнаружен");
@@ -318,6 +328,8 @@ public class LoadTaxonomyFromZip {
 	 * @throws IOException
 	 */
 	static public void parseCatalogXml() throws IOException {
+
+		System.out.println("Начало обработки catalog");
 		
 		catalog.clear();
 
@@ -345,7 +357,8 @@ public class LoadTaxonomyFromZip {
 				}
 
 	    	} catch (ParserConfigurationException | SAXException e) {
-	    		throw new RuntimeException("Ошибка обработки "+catalogPrefix);
+	    		//throw new RuntimeException("Ошибка обработки "+catalogPrefix);
+	    		System.out.println("Ошибка обработки "+catalogPrefix);
 			}
 		} else {
 			System.out.println("Ошибка! "+catalogPrefix+" не обнаружен");
@@ -591,6 +604,21 @@ public class LoadTaxonomyFromZip {
 			}
 		}
 		return node;
+	}
+
+	private static String getCodePoint(int level) {
+		StackTraceElement[] st = Thread.currentThread().getStackTrace();
+		return st.length<level ? "" : 
+			(
+				st[level].getFileName() + ":" + 
+				st[level].getClassName() + ":" + 
+	            st[level].getMethodName() + ":" +  
+	            st[level].getLineNumber()
+	         );
+	}
+	
+	private static String getTrace() {
+		return System.lineSeparator() + getCodePoint(5) + System.lineSeparator() + getCodePoint(4) + System.lineSeparator() + getCodePoint(3) + System.lineSeparator();
 	}
 	
 }
