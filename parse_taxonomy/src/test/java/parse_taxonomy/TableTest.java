@@ -107,4 +107,54 @@ class TableTest {
 		
 	}
 
+	@Test
+	void sr_819_ODS_5_Dvizhen_sredst() {
+		XbrlTable tbl = core.tables.get("http://www.cbr.ru/xbrl/nso/nfo/rep/2019-05-01/tab/sr_819_ODS");
+		Assertions.assertNotEquals(null, tbl);
+		
+		XbrlDefinition def = tbl.definitions.get("http://www.cbr.ru/xbrl/nso/nfo/rep/2019-05-01/tab/sr_819_ODS_5_Dvizhen_sredst");
+		Assertions.assertNotEquals(null, def);
+		
+		Assertions.assertEquals("http://www.cbr.ru/xbrl/nso/nfo/rep/2019-05-01/tab/sr_819_ODS_5_Dvizhen_sredst", def.role);
+		Assertions.assertEquals(1, def.child.size());
+		
+		XbrlDefElement root = def.child.get(0);
+
+		
+		Assertions.assertEquals(null, root.parent);
+		Assertions.assertEquals(3, root.child.size());
+		
+		
+		Map<String, XbrlDefElement> rootMap = new TreeMap<>(); 
+		root.child.forEach( c -> rootMap.put(c.label, c));
+		
+		
+		Assertions.assertEquals(0, rootMap.get("Spisan_sredst").child.size());
+		Assertions.assertEquals(0, rootMap.get("Zachisl_sredst").child.size());
+		Assertions.assertEquals(3, rootMap.get("hyp").child.size());
+		
+		XbrlDefElement hyp = rootMap.get("hyp");
+		
+		Assertions.assertEquals("Rek_kred_org_i_schetaTaxis",hyp.child.get(0).label);
+		Assertions.assertEquals("Kod_ValyutyAxis",hyp.child.get(1).label);
+		Assertions.assertEquals("Kod_Vid_OperacziiAxis",hyp.child.get(2).label);
+		
+		
+		XbrlDefElement Kod_ValyutyAxis = hyp.child.get(1);
+		Assertions.assertEquals("http://www.cbr.ru/xbrl/nso/nfo/dic/Kod_ValyutyAxis", Kod_ValyutyAxis.targetRole);
+
+		//System.out.println(Kod_ValyutyAxis.label + " " + Kod_ValyutyAxis.targetRole);
+		
+		
+		XbrlDefinition dic = core.dicts.definitions.get("http://www.cbr.ru/xbrl/nso/nfo/dic/Kod_ValyutyAxis");
+		 
+		Assertions.assertEquals(163,dic.child.get(0).child.get(0).child.size());
+		//System.out.println(dic.child.get(0).child.get(0).child.size());
+		
+		//.child.forEach( c-> System.out.println(c.label));
+		//System.out.println(root.child.size());
+		
+		
+	}
+	
 }
